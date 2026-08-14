@@ -149,13 +149,10 @@ CORS_ALLOW_ALL_ORIGINS = True
 
 
 # === STATIC FILES (RENDER DEPLOYMENT & LOCAL DEV) ===
-STATIC_URL = '/static/'
-
-STATICFILES_DIRS = [
-    BASE_DIR / 'static',
-]
-
+STATIC_URL = 'static/'
+STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 # safety_app/settings.py
 import os
 
