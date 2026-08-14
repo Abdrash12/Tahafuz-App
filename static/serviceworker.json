@@ -1,0 +1,29 @@
+const CACHE_NAME = 'tahafuz-cache-v1';
+const urlsToCache = [
+    '/',
+    '/static/app.js',
+    '/static/manifest.json'
+];
+
+// Install Event: Cache the core files
+self.addEventListener('install', event => {
+    event.waitUntil(
+        caches.open(CACHE_NAME).then(cache => {
+            return cache.addAll(urlsToCache);
+        })
+    );
+});
+
+// Fetch Event: Serve from cache if offline
+self.addEventListener('fetch', event => {
+    // Don't intercept API calls (let them fail so the native SMS fallback triggers)
+    if (event.request.url.includes('/api/')) {
+        return;
+    }
+    
+    event.respondWith(
+        caches.match(event.request).then(response => {
+            return response || fetch(event.request);
+        })
+    );
+});

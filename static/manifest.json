@@ -1,0 +1,16 @@
+{
+  "name": "Tahafuz - Women's Safety",
+  "short_name": "Tahafuz",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#fff0f5",
+  "theme_color": "#ff7eb3",
+  "description": "Offline-first women's safety and SOS application.",
+  "icons": [
+    {
+      "src": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e5/Red_circle.svg/192px-Red_circle.svg.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    }
+  ]
+}

@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tahafuz - Women's Safety</title>
+    <link rel="manifest" href="/static/manifest.json">
+    <style>
+        :root {
+            --ink: #323232;
+            --paper-front: #fff0f5; /* Light pink notebook paper */
+            --paper-back: #ffe4e1; /* Soft misty rose */
+            --bg-color: #ffffff;
+            --primary-btn: #ff7eb3;
+            --primary-btn-hover: #ff65a3;
+            --secondary-btn: #4ecdc4;
+            --secondary-btn-hover: #3bbfb6;
+            --switch-bg: #ffccd5;
+            --input-focus: #ff4757;
+
+            --card-width: 320px;
+            --card-height: 380px;
+            --input-width: 260px;
+            --input-height: 44px;
+            --btn-width: 140px;
+            --btn-height: 44px;
+
+            --border-width: 2px;
+            --shadow-offset: 4px;
+
+            --sketch-radius-1: 8px 24px 8px 24px / 24px 8px 24px 8px;
+            --sketch-radius-2: 24px 8px 24px 8px / 8px 24px 8px 24px;
+            --sketch-radius-btn: 16px 5px 16px 5px / 5px 16px 5px 16px;
+
+            font-family: "Comic Sans MS", "Chalkboard SE", "Marker Felt", "Gochi Hand", sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: #fff8fb;
+            color: var(--ink);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .hidden { display: none !important; }
+
+        /* --- Doodle Auth Wrapper --- */
+        .doodle-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            box-sizing: border-box;
+            padding: 20px;
+        }
+
+        .doodle-toggle {
+            position: absolute;
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .doodle-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 25px;
+            z-index: 5;
+        }
+
+        .doodle-mode-text {
+            font-size: 18px;
+            font-weight: bold;
+            color: var(--ink);
+            transition: opacity 0.3s;
+        }
+
+        .doodle-toggle:not(:checked) ~ .doodle-header .signup-text { opacity: 0.5; }
+        .doodle-toggle:checked ~ .doodle-header .login-text { opacity: 0.5; }
+
+        .doodle-switch-label {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+            background-color: var(--switch-bg);
+            border: var(--border-width) solid var(--ink);
+            border-radius: 20px;
+            cursor: pointer;
+            box-shadow: 2px 2px 0px var(--ink);
+            transition: transform 0.1s, box-shadow 0.1s;
+        }
+
+        .doodle-switch-label:active {
+            transform: translate(2px, 2px);
+            box-shadow: 0px 0px 0px var(--ink);
+        }
+
+        .doodle-switch-handle {
+            position: absolute;
+            top: 2px;
+            left: 3px;
+            width: 16px;
+            height: 16px;
+            background-color: var(--bg-color);
+            border: var(--border-width) solid var(--ink);
+            border-radius: 50%;
+            transition: transform 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+
+        .doodle-toggle:checked ~ .doodle-header .doodle-switch-label .doodle-switch-handle {
+            transform: translateX(24px);
+        }
+
+        .doodle-card-scene {
+            position: relative;
+            perspective: 1000px;
+            width: var(--card-width);
+            height: var(--card-height);
+            z-index: 2;
+        }
+
+        .doodle-svg {
+            position: absolute;
+            z-index: -1;
+            pointer-events: none;
+        }
+        .doodle-star { top: -25px; left: -35px; width: 48px; height: 48px; animation: float-star 4s ease-in-out infinite; }
+        .doodle-sparkle { bottom: -20px; right: -25px; width: 40px; height: 40px; animation: float-sparkle 4s ease-in-out infinite 1s; }
+        .doodle-swirl { top: 30px; right: -30px; width: 32px; height: 32px; animation: float-swirl 4s ease-in-out infinite 2s; }
+
+        @keyframes float-star {
+            0%, 100% { transform: translateY(0) rotate(-15deg); }
+            50% { transform: translateY(-8px) rotate(-10deg); }
+        }
+        @keyframes float-sparkle {
+            0%, 100% { transform: translateY(0) rotate(10deg); }
+            50% { transform: translateY(-8px) rotate(15deg); }
+        }
+        @keyframes float-swirl {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-8px) rotate(5deg); }
+        }
+
+        .doodle-card-inner {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.8s cubic-bezier(0.4, 0.2, 0.2, 1);
+        }
+
+        .doodle-toggle:checked ~ .doodle-card-scene .doodle-card-inner {
+            transform: rotateY(180deg);
+        }
+
+        .doodle-card-front, .doodle-card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            box-sizing: border-box;
+            border: var(--border-width) solid var(--ink);
+            border-radius: var(--sketch-radius-1);
+            box-shadow: var(--shadow-offset) var(--shadow-offset) 0px var(--ink);
+            background-image: repeating-linear-gradient(transparent, transparent 28px, rgba(0, 0, 0, 0.06) 28px, rgba(0, 0, 0, 0.06) 30px);
+            background-position: 0 15px;
+        }
+
+        .doodle-card-front { background-color: var(--paper-front); }
+        .doodle-card-back { background-color: var(--paper-back); transform: rotateY(180deg); border-radius: var(--sketch-radius-2); }
+
+        .doodle-title {
+            font-size: 24px;
+            font-weight: 900;
+            color: var(--ink);
+            margin: 5px 0 15px 0;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transform: rotate(-3deg);
+        }
+
+        .doodle-title-alt { transform: rotate(2deg); }
+
+        .doodle-form {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            width: 100%;
+            align-items: center;
+        }
+
+        .doodle-input {
+            width: var(--input-width);
+            height: var(--input-height);
+            padding: 5px 15px;
+            box-sizing: border-box;
+            font-family: inherit;
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--ink);
+            background-color: var(--bg-color);
+            border: var(--border-width) solid var(--ink);
+            border-radius: var(--sketch-radius-1);
+            box-shadow: 3px 3px 0px var(--ink);
+            outline: none;
+            transition: all 0.2s ease;
+        }
+
+        .doodle-input:focus {
+            border: var(--border-width) solid var(--input-focus);
+            background-color: #fffdf5;
+            box-shadow: 4px 4px 0px var(--ink);
+        }
+
+        .doodle-btn {
+            margin: 10px 0;
+            width: var(--btn-width);
+            height: var(--btn-height);
+            font-family: inherit;
+            font-size: 16px;
+            font-weight: 900;
+            color: var(--ink);
+            background-color: var(--primary-btn);
+            border: var(--border-width) solid var(--ink);
+            border-radius: var(--sketch-radius-btn);
+            box-shadow: 4px 4px 0px var(--ink);
+            cursor: pointer;
+            transition: all 0.15s ease;
+            transform: rotate(-1deg);
+        }
+
+        .doodle-btn-alt {
+            background-color: var(--secondary-btn);
+            transform: rotate(1deg);
+        }
+
+        .doodle-btn:hover {
+            transform: translateY(-2px) rotate(-2deg);
+            box-shadow: 5px 5px 0px var(--ink);
+        }
+
+        .doodle-btn:active {
+            transform: translate(3px, 3px) rotate(0deg);
+            box-shadow: 0px 0px 0px var(--ink);
+        }
+
+        /* --- Main Dashboard & UI --- */
+        #dashboard {
+            width: 100%;
+            max-width: 440px;
+            padding: 20px;
+            margin: 0 auto;
+        }
+
+        .dash-card {
+            background: white;
+            border: 2px solid var(--ink);
+            border-radius: 20px;
+            padding: 24px;
+            box-shadow: 4px 4px 0px var(--ink);
+            margin-bottom: 20px;
+        }
+
+        #sos-btn {
+            width: 180px;
+            height: 180px;
+            border-radius: 50%;
+            background: #ff4757;
+            color: white;
+            font-size: 38px;
+            font-weight: 900;
+            border: 4px solid var(--ink);
+            box-shadow: 6px 6px 0px var(--ink);
+            cursor: pointer;
+            display: block;
+            margin: 20px auto;
+            transition: transform 0.1s;
+        }
+        #sos-btn:active { transform: translate(4px, 4px); box-shadow: 2px 2px 0px var(--ink); }
+
+        /* Samsung Fake Call Screen */
+        #fake-call-screen {
+            position: fixed; top:0; left:0; width:100%; height:100%; background: #121212; color: white; z-index: 9999; display: flex; flex-direction: column; justify-content: space-between; padding: 50px 24px; text-align: center;
+        }
+        /* --- Functional Calculator Styles --- */
+.calc-wrapper {
+    width: 100%;
+    max-width: 320px;
+    background: #2d3436;
+    padding: 24px;
+    border-radius: 28px;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
+    border: 3px solid #636e72;
+}
+
+.calc-display {
+    background: #dfe6e9;
+    width: 100%;
+    height: 75px;
+    border-radius: 14px;
+    text-align: right;
+    font-size: 32px;
+    font-family: monospace;
+    padding: 18px;
+    margin-bottom: 20px;
+    color: #2d3436;
+    overflow: hidden;
+    box-shadow: inset 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.calc-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+}
+
+.calc-key {
+    background: #636e72;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 60px;
+    height: 60px;
+    font-size: 20px;
+    font-weight: bold;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto;
+    transition: background 0.15s, transform 0.1s;
+}
+
+.calc-key:active {
+    transform: scale(0.95);
+    background: #b2bec3;
+}
+
+.calc-key.op {
+    background: #fdcb6e;
+    color: #2d3436;
+}
+
+.calc-key.op:active {
+    background: #ffeaa7;
+}
+
+.calc-key.special {
+    background: #ff7675;
+}
+
+.calc-key.equals {
+    background: #00b894;
+    color: white;
+}
+    </style>
+</head>
+<body>
+
+    <!-- Auth Screen with Doodle Theme -->
+    <div id="auth-screen" class="doodle-wrapper">
+        <input type="checkbox" id="doodle-flip" class="doodle-toggle" aria-label="Toggle Login and Sign up" />
+
+        <div class="doodle-header">
+            <span class="doodle-mode-text login-text">Log in</span>
+            <label class="doodle-switch-label" for="doodle-flip" tabindex="0">
+                <span class="doodle-switch-handle"></span>
+            </label>
+            <span class="doodle-mode-text signup-text">Sign up</span>
+        </div>
+
+        <div class="doodle-card-scene">
+            <!-- Decorative SVGs -->
+            <svg class="doodle-svg doodle-star" viewBox="0 0 24 24" fill="#ffd166" stroke="var(--ink)" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+            <svg class="doodle-svg doodle-sparkle" viewBox="0 0 24 24" fill="#06d6a0" stroke="var(--ink)" stroke-width="1.5"><path d="M12 2 Q12 12 22 12 Q12 12 12 22 Q12 12 2 12 Q12 12 12 2 Z"></path></svg>
+            <svg class="doodle-svg doodle-swirl" viewBox="0 0 24 24" fill="none" stroke="var(--ink)" stroke-width="1.5"><path d="M3 12 C 3 5 10 5 16 5 C 20 5 21 9 18 12 C 15 15 10 13 12 9 C 14 5 22 9 21 16"></path></svg>
+
+            <div class="doodle-card-inner">
+                <!-- Front Card: Log in -->
+                <div class="doodle-card-front">
+                    <div class="doodle-title">Tahafuz 🌸</div>
+                    <form class="doodle-form" onsubmit="event.preventDefault(); login();">
+                        <input class="doodle-input" id="login-username" placeholder="Username" type="text" required />
+                        <input class="doodle-input" id="login-password" placeholder="Password" type="password" required />
+                        <button type="submit" class="doodle-btn">Let's Go!</button>
+                    </form>
+                </div>
+
+                <!-- Back Card: Sign up -->
+                <div class="doodle-card-back">
+                    <div class="doodle-title doodle-title-alt">Join Us!</div>
+                    <form class="doodle-form" onsubmit="event.preventDefault(); register();">
+                        <input class="doodle-input" id="reg-username" placeholder="Username" type="text" required />
+                        <input class="doodle-input" id="reg-password" placeholder="Password" type="password" required />
+                        <input class="doodle-input" id="reg-phone" placeholder="Fallback Phone (+92...)" type="tel" />
+                        <button type="submit" class="doodle-btn doodle-btn-alt">Confirm!</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Dashboard -->
+    <div id="dashboard" class="hidden">
+        <h1 style="text-align: center; color: #d6336c; margin-bottom: 10px;">Tahafuz <span style="font-size: 18px; color: #636e72;">تحفظ</span></h1>
+
+        <div style="text-align: center; margin-bottom: 20px;">
+            <button id="sos-btn" onclick="triggerSOS()">SOS</button>
+            <p id="status-text" style="font-weight: bold; color: #636e72;">Tap to instantly share location</p>
+        </div>
+        
+        <div class="dash-card">
+            <h3 style="margin-bottom: 15px; color: #2d3436;">Trusted Contacts</h3>
+            <div id="contacts-list" style="margin-bottom: 15px;"></div>
+            
+            <input type="text" id="c-name" class="doodle-input" style="width:100%; margin-bottom:10px;" placeholder="Contact Name (e.g. Sister)">
+            <input type="tel" id="c-phone" class="doodle-input" style="width:100%; margin-bottom:10px;" placeholder="Phone (e.g. +923...)">
+            <input type="email" id="c-email" class="doodle-input" style="width:100%; margin-bottom:10px;" placeholder="Email (Optional)">
+            <button class="doodle-btn" style="width:100%; margin:0;" onclick="addContact()">Add Contact</button>
+        </div>
+
+        <div style="text-align: center; margin-top: 15px;">
+            <button class="doodle-btn doodle-btn-alt" style="width: 100%;" onclick="startFakeCall()">Simulate Fake Call</button>
+            <button class="doodle-btn" style="width: 100%; background: #dfe6e1; margin-top: 10px;" ondblclick="toggleCamouflage()">Hide App (Calculator)</button>
+        </div>
+    </div>
+
+    <!-- Camouflage Screen -->
+    <!-- Camouflage Screen (Full Functional Calculator) -->
+<div id="camouflage-screen" class="hidden" style="position:fixed; top:0; left:0; width:100%; height:100%; background:#f5f6fa; padding:20px; display:flex; flex-direction:column; align-items:center; justify-content:center; z-index:9999;">
+    <div class="calc-wrapper">
+        <div id="calc-display" class="calc-display">0</div>
+        <div class="calc-grid">
+            <button class="calc-key special" ondblclick="toggleCamouflage()" onclick="clearCalc()">C</button>
+            <button class="calc-key" onclick="appendCalcValue('±')">±</button>
+            <button class="calc-key" onclick="appendCalcValue('%')">%</button>
+            <button class="calc-key op" onclick="appendCalcValue('/')">÷</button>
+            
+            <button class="calc-key" onclick="appendCalcValue('7')">7</button>
+            <button class="calc-key" onclick="appendCalcValue('8')">8</button>
+            <button class="calc-key" onclick="appendCalcValue('9')">9</button>
+            <button class="calc-key op" onclick="appendCalcValue('*')">×</button>
+            
+            <button class="calc-key" onclick="appendCalcValue('4')">4</button>
+            <button class="calc-key" onclick="appendCalcValue('5')">5</button>
+            <button class="calc-key" onclick="appendCalcValue('6')">6</button>
+            <button class="calc-key op" onclick="appendCalcValue('-')">-</button>
+            
+            <button class="calc-key" onclick="appendCalcValue('1')">1</button>
+            <button class="calc-key" onclick="appendCalcValue('2')">2</button>
+            <button class="calc-key" onclick="appendCalcValue('3')">3</button>
+            <button class="calc-key op" onclick="appendCalcValue('+')">+</button>
+            
+            <button class="calc-key" onclick="appendCalcValue('0')" style="grid-column: span 2; width: 100%; border-radius: 30px;">0</button>
+            <button class="calc-key" onclick="appendCalcValue('.')">.</button>
+            <button class="calc-key equals" onclick="calculateResult()">=</button>
+        </div>
+        <p style="text-align:center; font-size:11px; color:#b2bec3; margin-top:15px; font-family: sans-serif;">Double-tap 'C' to exit camouflage</p>
+    </div>
+</div>
+
+    <!-- Samsung-Style Fake Call Screen Overlay -->
+    <div id="fake-call-screen" class="hidden">
+        <div style="margin-top: 20px;">
+            <div style="width: 90px; height: 90px; background: #333; border-radius: 50%; margin: 0 auto 20px; display: flex; align-items: center; justify-content: center; font-size: 36px; color: #ff7eb3;">👤</div>
+            <h2 id="caller-name" style="font-size: 32px; font-weight: 400; margin-bottom: 8px;">Mom 🤍</h2>
+            <p id="call-status" style="font-size: 15px; color: #b0b0b0;">Incoming call...</p>
+        </div>
+        <div id="incoming-actions" style="display: flex; justify-content: space-around; width: 100%; max-width: 320px; margin: 0 auto 40px;">
+            <button onclick="declineFakeCall()" style="width: 75px; height: 75px; border-radius: 50%; background: #ea4335; border: none; color: white; font-size: 28px; cursor: pointer;">✕</button>
+            <button onclick="acceptFakeCall()" style="width: 75px; height: 75px; border-radius: 50%; background: #34a853; border: none; color: white; font-size: 28px; cursor: pointer;">📞</button>
+        </div>
+        <div id="active-actions" class="hidden" style="width: 100%; max-width: 360px; margin: 0 auto;">
+            <p id="call-timer" style="font-size: 16px; color: #34a853; font-weight: 600; margin-bottom: 30px;">00:00</p>
+            <button onclick="declineFakeCall()" style="width: 75px; height: 75px; border-radius: 50%; background: #ea4335; border: none; color: white; font-size: 28px; cursor: pointer; margin: 0 auto; display: block;">📞</button>
+        </div>
+    </div>
+
+    <script src="/static/app.js"></script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/static/serviceworker.js');
+            });
+        }
+    </script>
+</body>
+</html>

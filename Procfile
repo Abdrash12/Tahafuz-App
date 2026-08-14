@@ -1,0 +1,1 @@
+web: gunicorn safety_app.wsgi --log-file -
