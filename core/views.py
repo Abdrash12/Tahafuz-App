@@ -1,11 +1,15 @@
 # core/views.py
+import os
+import resend
 from rest_framework import viewsets, generics
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
-from django.core.mail import send_mail
 from .models import TrustedContact, SOSAlert, CustomUser
 from .serializers import TrustedContactSerializer, UserRegistrationSerializer
+
+# Initialize Resend with the environment variable API key
+resend.api_key = os.getenv("RESEND_API_KEY")
 
 class RegisterUserView(generics.CreateAPIView):
     queryset = CustomUser.objects.all()
@@ -36,18 +40,27 @@ class TriggerSOSView(APIView):
             longitude=lng
         )
         
-        # Dispatch email notifications to trusted contacts with emails
+        # Dispatch email notifications to trusted contacts using Resend HTTPS SDK
         maps_link = f"https://www.google.com/maps?q={lat},{lng}"
         contacts = TrustedContact.objects.filter(user=request.user, is_active=True)
-        recipient_emails = [c.email for c in contacts if c.email]
         
-        if recipient_emails:
-            send_mail(
-                subject='URGENT: Safety Alert from Tahafuz',
-                message=f'URGENT! {request.user.username} has triggered an SOS emergency alert. Their current location is: {maps_link}',
-                from_email=None,
-                recipient_list=recipient_emails,
-                fail_silently=True,
-            )
+        for contact in contacts:
+            if contact.email:
+                try:
+                    resend.Emails.send({
+                        "from": "onboarding@resend.dev",
+                        "to": contact.email,
+                        "subject": "URGENT: Safety Alert from Tahafuz",
+                        "html": f"""
+                            <div style="font-family: Arial, sans-serif; padding: 20px; background: #fdf2f2; border-left: 6px solid #e74c3c;">
+                                <h2 style="color: #c0392b;">🚨 Emergency SOS Alert!</h2>
+                                <p>Your contact <strong>{request.user.username}</strong> has triggered an emergency distress signal.</p>
+                                <p><strong>Live GPS Location:</strong> <a href="{maps_link}" target="_blank">Click here to open Google Maps</a></p>
+                                <p style="font-size: 12px; color: #7f8c8d;">Coordinates: {lat}, {lng}</p>
+                            </div>
+                        """
+                    })
+                except Exception as e:
+                    print(f"Failed to send email to {contact.email}: {e}")
         
         return Response({"status": "SOS Logged and Emails Dispatched", "alert_id": alert.id}, status=201)
